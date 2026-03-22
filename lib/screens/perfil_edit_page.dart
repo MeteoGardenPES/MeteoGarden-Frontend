@@ -47,6 +47,7 @@ class _PerfilEditPageState extends State<PerfilEditPage> {
     super.initState();
     // Inicialitzem el controlador amb el nom d'usuari actual
     usernameController = TextEditingController(text: widget.profile.username);
+    language = widget.profile.language;
     fetchCities();
   }
 
@@ -92,6 +93,48 @@ class _PerfilEditPageState extends State<PerfilEditPage> {
     }
   }
 
+  void _actualitzar() async {
+ 
+    
+    final url = Uri.parse("http://127.0.0.1:8000/api/edit_profile/");
+    //en emulador es: 10.0.2.2:8000
+    //en web es: 127.0.0.1:8000
+
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json",
+      "Authorization": "Token ${Provider.of<UserModel>(context, listen: false).token}"},
+      body: jsonEncode({
+        'username': usernameController.text,
+        'city': selectedCity?.name,
+        'language': language,
+        'stationCode': selectedCity?.code,
+      }),
+    );
+
+    if (!mounted) return;
+
+    if (response.statusCode == 200) {
+      debugPrint("perfil actualitzat");
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Perfil actualitzat')));
+
+      Provider.of<UserModel>(context, listen: false).updateProfile(
+        newUsername: usernameController.text, newCity: selectedCity?.name,newLanguage: language);
+
+      Navigator.pop(context);
+
+    } else {
+      debugPrint("Error: ${response.body}");
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Error actualitzant el perfil')));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -124,7 +167,7 @@ class _PerfilEditPageState extends State<PerfilEditPage> {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    initialValue: language,
+                    initialValue: widget.profile.language,
                     decoration: const InputDecoration(labelText: 'Idioma'),
                     items: ['Català', 'Castellano', 'English']
                         .map(
@@ -143,10 +186,7 @@ class _PerfilEditPageState extends State<PerfilEditPage> {
                   const Spacer(),
                   FilledButton(
                     onPressed: () {
-                      Provider.of<UserModel>(context, listen: false).
-                      updateProfile(newUsername: usernameController.text,
-                      newCity: selectedCity?.name, newLanguage: language);
-                      Navigator.pop(context);
+                      _actualitzar();
                     },
                     child: const Text('Guardar canvis'),
                   ),
