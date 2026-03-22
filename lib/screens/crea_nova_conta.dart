@@ -47,7 +47,7 @@ class _CreaNovaContaState extends State<CreaNovaConta> {
   }
 
   void _submit() async {
-    final url = Uri.parse("http://10.0.2.2:8000/api/register/");
+    final url = Uri.parse("http://127.0.0.1:8000/api/register/");
     //en emulador es: 10.0.2.2:8000
     //en web es: 127.0.0.1:8000
 

@@ -33,7 +33,7 @@ class _LoginPageState extends State<LoginPage> {
 
   void _login() async {
     final url = Uri.parse(
-      "http://10.0.2.2:8000/api/login/",
+      "http://127.0.0.1:8000/api/login/",
     ); // url del endpoint de login al backend
 
     final response = await http.post(
@@ -210,7 +210,7 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> _fetchAndSaveProfile(String token) async {
-    final url = Uri.parse("http://10.0.2.2:8000/api/get_profile/");
+    final url = Uri.parse("http://127.0.0.1:8000/api/get_profile/");
 
     final response = await http.get(
       url,

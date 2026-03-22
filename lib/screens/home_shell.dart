@@ -31,7 +31,7 @@ class _HomeShellState extends State<HomeShell> {
       PhotoPage(),
       MissionsPage(),
       PerfilPage(),
-      InventoryPage(baseUrl: "http://10.0.2.2:8000", username: username),
+      InventoryPage(baseUrl: "http://127.0.0.1:8000", username: username),
       AlbumPage(),
     ];
 
