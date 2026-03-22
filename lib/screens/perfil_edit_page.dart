@@ -36,6 +36,7 @@ class PerfilEditPage extends StatefulWidget {
 
 class _PerfilEditPageState extends State<PerfilEditPage> {
   late TextEditingController usernameController;
+  final TextEditingController ciutatSearchController = TextEditingController();
   
   List<City> cities = [];
   City? selectedCity;
@@ -45,7 +46,6 @@ class _PerfilEditPageState extends State<PerfilEditPage> {
   @override
   void initState() {
     super.initState();
-    // Inicialitzem el controlador amb el nom d'usuari actual
     usernameController = TextEditingController(text: widget.profile.username);
     language = widget.profile.language;
     fetchCities();
@@ -71,14 +71,13 @@ class _PerfilEditPageState extends State<PerfilEditPage> {
         setState(() {
           cities = fetchedCities;
           
-          // Busquem la ciutat a la llista que coincideixi amb la del perfil de l'usuari.
-          // Aquí suposem que profile.city guarda el 'name' o el 'code'. 
-          // Ajusta-ho si profile.city guarda el codi de l'estació en comptes del nom.
-          try {
-            selectedCity = cities.firstWhere((city) => city.name == widget.profile.city);
-          } catch (e) {
-            // Si l'usuari té una ciutat que ja no existeix a l'API o està buida
-            selectedCity = null; 
+          selectedCity = null; // Per defecte ho deixem buit
+          for (var c in cities) {
+            if (c.name == widget.profile.city) {
+              selectedCity = c;
+              ciutatSearchController.text = c.name;
+              break; // Hem trobat la ciutat, parem de buscar
+            }
           }
           
           isLoading = false;
@@ -137,6 +136,15 @@ class _PerfilEditPageState extends State<PerfilEditPage> {
 
   @override
   Widget build(BuildContext context) {
+    // 1. Creem l'estil base perquè tots els camps siguin iguals
+    final defaultDecoration = InputDecoration(
+      filled: true,
+      fillColor: Colors.green.withValues(alpha: 0.04),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+    );
+
     return Scaffold(
       appBar: AppBar(title: const Text('Modificar perfil')),
       body: isLoading
@@ -145,34 +153,54 @@ class _PerfilEditPageState extends State<PerfilEditPage> {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
+                  // CAMP 1: USUARI
                   TextField(
-                    decoration: const InputDecoration(labelText: 'Usuari'),
                     controller: usernameController,
+                    // Apliquem l'estil i li afegim el text
+                    decoration: defaultDecoration.copyWith(labelText: 'Usuari'),
                   ),
-                  const SizedBox(height: 12),
-                  DropdownButtonFormField<City>(
-                    initialValue: selectedCity,
-                    decoration: const InputDecoration(labelText: 'Ciutat'),
-                    items: cities.map((city) {
-                      return DropdownMenuItem<City>(
+                  const SizedBox(height: 16),
+                  
+                  // CAMP 2: CIUTAT
+                  DropdownMenu<City>(
+                    initialSelection: selectedCity,
+                    controller: ciutatSearchController,
+                    requestFocusOnTap: true,
+                    enableFilter: true,
+                    expandedInsets: EdgeInsets.zero,
+                    label: const Text('Ciutat'),
+                    // El DropdownMenu fa servir un Theme en comptes d'InputDecoration, 
+                    // però hi posem els mateixos valors
+                    inputDecorationTheme: InputDecorationTheme(
+                      filled: true,
+                      fillColor: Colors.green.withValues(alpha: 0.04),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    dropdownMenuEntries: cities.map<DropdownMenuEntry<City>>((City city) {
+                      return DropdownMenuEntry<City>(
                         value: city,
-                        child: Text(city.name),
+                        label: city.name,
                       );
                     }).toList(),
-                    onChanged: (value) {
+                    onSelected: (City? city) {
                       setState(() {
-                        selectedCity = value;
+                        selectedCity = city;
                       });
+                      // HEM ELIMINAT L'UNFOCUS D'AQUÍ PER EVITAR L'ERROR
                     },
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
+                  
+                  // CAMP 3: IDIOMA
                   DropdownButtonFormField<String>(
-                    initialValue: widget.profile.language,
-                    decoration: const InputDecoration(labelText: 'Idioma'),
+                    value: language,
+                    // Apliquem exactament el mateix estil
+                    decoration: defaultDecoration.copyWith(labelText: 'Idioma'),
                     items: ['Català', 'Castellano', 'English']
                         .map(
-                          (lang) =>
-                              DropdownMenuItem(value: lang, child: Text(lang)),
+                          (lang) => DropdownMenuItem(value: lang, child: Text(lang)),
                         )
                         .toList(),
                     onChanged: (value) {
@@ -182,7 +210,6 @@ class _PerfilEditPageState extends State<PerfilEditPage> {
                     },
                   ),
 
-                  
                   const Spacer(),
                   FilledButton(
                     onPressed: () {
